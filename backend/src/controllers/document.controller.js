@@ -1,11 +1,5 @@
 const documentService = require('../services/document.service');
-
-function createError(status, code, message) {
-  const error = new Error(message);
-  error.status = status;
-  error.code = code;
-  return error;
-}
+const createError = require('../errors/create-error');
 
 async function upload(req, res) {
   if (!req.file) {

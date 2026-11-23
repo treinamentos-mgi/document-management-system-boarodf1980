@@ -1,4 +1,5 @@
 const { once } = require('node:events');
+const fs = require('node:fs/promises');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../src/app');
@@ -70,4 +71,29 @@ test('download de documento inexistente retorna 404', async (t) => {
 
   assert.equal(response.status, 404);
   assert.equal((await response.json()).error.code, 'DOCUMENT_NOT_FOUND');
+});
+
+test('download de documento com arquivo local indisponível retorna 404', async (t) => {
+  const baseUrl = await startServer(t);
+  let documentId;
+  t.after(async () => {
+    if (documentId) await documentRepository.deleteDocument(documentId);
+  });
+
+  const form = new FormData();
+  form.append('file', new Blob(['conteudo de teste'], { type: 'text/plain' }), 'nota.txt');
+  const uploadResponse = await fetch(`${baseUrl}/upload`, { method: 'POST', body: form });
+  const uploadedDocument = await uploadResponse.json();
+  documentId = uploadedDocument.id;
+  await fs.unlink(documentRepository.findById(documentId).storagePath);
+
+  const response = await fetch(`${baseUrl}/documents/${documentId}/download`);
+
+  assert.equal(response.status, 404);
+  assert.deepEqual(await response.json(), {
+    error: {
+      code: 'FILE_NOT_FOUND',
+      message: 'O arquivo deste documento não está disponível.',
+    },
+  });
 });
