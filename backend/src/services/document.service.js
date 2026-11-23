@@ -1,12 +1,5 @@
-const fs = require('node:fs/promises');
 const documentRepository = require('../repositories/document.repository');
-
-function createError(status, code, message) {
-  const error = new Error(message);
-  error.status = status;
-  error.code = code;
-  return error;
-}
+const createError = require('../errors/create-error');
 
 async function createDocument(file) {
   try {
@@ -28,8 +21,7 @@ async function getDownloadDocument(id) {
   }
 
   try {
-    const file = await fs.stat(document.storagePath);
-    if (!file.isFile()) {
+    if (!await documentRepository.isFileAvailable(document.storagePath)) {
       throw createError(404, 'FILE_NOT_FOUND', 'O arquivo deste documento não está disponível.');
     }
   } catch (error) {

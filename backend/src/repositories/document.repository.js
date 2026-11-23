@@ -52,6 +52,15 @@ async function removeFile(filePath) {
   }
 }
 
+async function isFileAvailable(filePath) {
+  try {
+    return (await fs.promises.stat(filePath)).isFile();
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return false;
+    throw error;
+  }
+}
+
 async function deleteDocument(id) {
   const document = documents.get(id);
   if (!document) return;
@@ -66,5 +75,6 @@ module.exports = {
   findAll,
   findById,
   removeFile,
+  isFileAvailable,
   deleteDocument,
 };
